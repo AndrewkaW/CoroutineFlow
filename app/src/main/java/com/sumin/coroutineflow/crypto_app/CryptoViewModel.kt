@@ -4,7 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.launchIn
 
 class CryptoViewModel : ViewModel() {
 
@@ -18,14 +21,19 @@ class CryptoViewModel : ViewModel() {
     }
 
     private fun loadData() {
-        viewModelScope.launch {
-                val currentState = _state.value
-                if (currentState !is State.Content || currentState.currencyList.isEmpty()) {
-                    _state.value = State.Loading
+            repository.getCurrencyList()
+                .onStart {
+                    val currentState = _state.value
+                    if (currentState !is State.Content || currentState.currencyList.isEmpty()) {
+                        _state.value = State.Loading
+                    }
                 }
-                 repository.getCurrencyList().collect{
-                    currencyList -> _state.value = State.Content(currencyList = currencyList)
+                .filter { currencyList ->
+                    currencyList.isNotEmpty()
                 }
-        }
+                .onEach { currencyList ->
+                    _state.value = State.Content(currencyList = currencyList)
+                }
+                .launchIn(viewModelScope)
     }
 }
