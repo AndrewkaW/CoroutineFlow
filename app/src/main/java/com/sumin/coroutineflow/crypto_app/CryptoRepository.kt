@@ -10,13 +10,13 @@ object CryptoRepository {
     private val currencyNames = listOf("BTC", "ETH", "USDT", "BNB", "USDC")
     private val currencyList = mutableListOf<Currency>()
 
-    fun getCurrencyList(): Flow<List<Currency>> {
-        return flow{
-            while (true) {
-                generateCurrencyList()
-                emit(currencyList.toList())
-                delay(3000)
-            }
+    fun getCurrencyList(): Flow<List<Currency>> = flow {
+        emit(currencyList.toList())
+        while (true) {
+            delay(3000)
+            generateCurrencyList()
+            emit(currencyList.toList())
+            delay(3000)
         }
     }
 
